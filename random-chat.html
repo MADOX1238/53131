@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ar"> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>الدردشة العشوائية</title> 
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-image: url('https://i.pinimg.com/originals/0b/59/34/0b5934b623f3c6f5377f221959d77982.gif');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            height: 100vh;
+            color: white;
+        }
+        h1 {
+            font-size: 60px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+        }
+        input {
+            padding: 10px;
+            font-size: 18px;
+            width: 80%;
+            margin-bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        button span {
+            color: #007bff;
+        }
+        .message {
+            color: red;
+            font-size: 18px;
+        }
+    </style> 
+ </head> 
+ <body> 
+  <h1>الدردشة العشوائية</h1> 
+  <p>من فضلك أدخل اسمك للانضمام:</p> 
+  <input type="text" id="usernameInput" placeholder="أدخل اسمك هنا"> 
+  <br> <button id="enterChatBtn"><span>دخول</span></button> 
+  <p id="message" class="message" style="display: none;">لا يوجد مستخدم لم يضغط على زر دخول.</p>
+  
+  <script type="module">
+        // Import Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCnHSUo_Vu53NidFWYlQ74_CyOyfVW_BqQ",
+            authDomain: "alaah-8d503.firebaseapp.com",
+            databaseURL: "https://alaah-8d503-default-rtdb.firebaseio.com",
+            projectId: "alaah-8d503",
+            storageBucket: "alaah-8d503.firebasestorage.app",
+            messagingSenderId: "365922482892",
+            appId: "1:365922482892:web:a843fbb3594d200c67e069",
+            measurementId: "G-D4TPJW4RT8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        document.getElementById('enterChatBtn').addEventListener('click', function() {
+            const enteredUsername = document.getElementById('usernameInput').value;
+
+            if (enteredUsername.trim() !== "") {
+                sessionStorage.setItem("username", enteredUsername.trim());
+
+                // تسجيل المستخدم في قاعدة البيانات للبحث عن دردشة
+                const userRef = ref(db, 'users/' + enteredUsername.trim());
+                set(userRef, { status: "waiting" });
+
+                // إعداد المؤقت لمدة دقيقة
+                const timeout = setTimeout(() => {
+                    document.getElementById('message').style.display = "block";
+                }, 60000); // 60,000ms = 1 minute
+
+                // البحث عن مستخدم متاح للدردشة
+                const usersRef = ref(db, 'users');
+                onValue(usersRef, (snapshot) => {
+                    const data = snapshot.val();
+                    let availableUser = null;
+                    for (let user in data) {
+                        if (data[user].status === "waiting" && user !== enteredUsername.trim()) {
+                            availableUser = user;
+                            break;
+                        }
+                    }
+
+                    if (availableUser) {
+                        // إذا وجد مستخدم آخر، توجيه المستخدم إلى الدردشة
+                        clearTimeout(timeout); // إلغاء المؤقت عند العثور على مستخدم
+                        window.location.href = "random-chat-room.html?user=" + availableUser;
+                    } else {
+                        // في حال عدم وجود مستخدم آخر
+                        alert("جاري البحث عن مستخدم...");
+                    }
+                });
+            } else {
+                alert("من فضلك أدخل اسم المستخدم");
+            }
+        });
+    </script> 
+ 
+</body></html>
